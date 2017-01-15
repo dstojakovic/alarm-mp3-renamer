@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 def main():
+  '''TODO: program description '''
   # TODO: ubacivanje config fajla
   # TODO: GUI
   
-  # import modules
   import os
   import pdb
   import logging
@@ -12,40 +12,34 @@ def main():
   logging.basicConfig(level=logging.INFO)
   logger = logging.getLogger(__name__)
   directoryMaster = 'd:\mp3\podcast\Alarm'
-  directoryMonth = '201701-test'
+  # directoryMonth = '201701-test'
+  directoryMonth = '201701'
   directoryWork = directoryMaster + os.sep + directoryMonth
   directoryCurrent = os.path.dirname(os.path.realpath(__file__))
-  weekdays = ['ponedeljak',
-          'utorak',
-          'sreda',
-          'cetvrtak',
-          'petak'
-          ]
+  weekdays = ['ponedeljak', 'utorak', 'sreda', 'cetvrtak', 'petak']
 
 
   def readMp3Filenames(dirWorking):
-    '''
-    TODO:opis funkcije
-    '''
+    '''Scans given absolute path for mp3 files and returns them as list'''
     fileNamesAll = os.listdir(dirWorking)
     fileNamesMp3 = []
     for fileName in fileNamesAll:
       fileNameLower = fileName.lower()
       if fileNameLower[-3:] == 'mp3':
+        logger.debug('{0} added to mp3 list'.format(fileName))
         fileNamesMp3.append(fileName)
       else:
-        logger.debug('{} is not mp3'.format(fileName))
+        logger.debug('{0} is not mp3'.format(fileName))
     return fileNamesMp3
 
 
   def renameMp3Filenames(inputMp3Filenames, inputDirectory):
+    '''Renames list of mp3 files in given directory, returns nothing.
+    {weekday}_{DD}.{MM}.{YYYY}1.mp3 -> {YYYY}.{MM}.{DD}_{weekday}.mp3
     '''
-    TODO:opis funkcije
-    '''
-    # hardkodovanje, obice se o glavu
-    # cetvrtak_05.01.20171.mp3  {dan}_{DD}.{MM}.{YYYY}1.mp3
-    # 2017.01.05_{dan}.mp3      {YYYY}.{MM}.{DD}_{dan}.mp3
-    # moze biti problem ako ima dan negde u toku fajla, a ne napocetku
+    # hardcoded, there will be trouble latter
+    # there can be problem if there is weekday somewhere else than at begging
+    # TODO: test for relative path, works with absolute path only
     logger.debug('input Filename, new Filename')
     for fileName in inputMp3Filenames:
       targetFilename = ''
@@ -59,7 +53,7 @@ def main():
           logger.debug(fileName, day)
           fileNameTemp = fileName[(len(day) + 1):]
           fileNameTempList = fileNameTemp.split('.')
-          # skidanje suvisnog broja na kraju YYYY
+          # remove unneccessery figure at end YYYY string
           if len(fileNameTempList[2]) > 4:
             logger.debug('Additional figure present in year (YYYYx)')
             fileNameTempList[2] = fileNameTempList[2][0:-1]
@@ -82,17 +76,18 @@ def main():
           else:
             logger.warn('{0} skipped, already exists.'.format(fileName))
         elif weekdayTest == -1:
-          logger.debug('{0} not present in {1}'.format(day, fileName))
+          logger.debug('{0} not found in {1}'.format(day, fileName))
           counterDays = counterDays + 1
           if counterDays > 4:
-            logger.warn('Not any weekday in {0}'.format(inputFilename=fileName))
+            logger.warn('weekday not found in {0}'.format(fileName))
         else:
-          logger.error(' TODO unknown case for weekday in filename')
+          logger.error('TODO: unknown case for weekday in {0}'.format(fileName))
   
   logging.info('Start')
   mp3Files = readMp3Filenames(directoryWork)
   renameMp3Filenames(mp3Files, directoryWork)
   logging.info('Finished')
+
 
 if __name__ == '__main__':
     main()
