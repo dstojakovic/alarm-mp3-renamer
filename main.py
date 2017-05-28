@@ -18,7 +18,7 @@ logger.info(sys.prefix)
 logger.debug('Config started.')
 configFile = 'config.xml'
 directoryMaster = 'd:\mp3\podcast\Alarm'
-# directoryMonth = '201701-test'
+# directoryMonth = '201705-test'
 directoryMonth = '201705'
 directoryWork = directoryMaster + os.sep + directoryMonth
 directoryCurrent = os.path.dirname(os.path.realpath(__file__))
@@ -82,9 +82,19 @@ def newMp3Filename(inputMp3Filename):
       logger.debug('Rearanging timestamp in filename finished: {0}.'.format(targetFilename))
     elif weekdayTest == -1:
       logger.debug('day {0} not found in filename'.format(day))
+    else:
+      logger.error('TODO: unknown case for weekday in {0}'.format(fileName))
   return targetFilename
 
-def renameMp3Filenames(inputMp3Filenames, inputDirectory):
+def newMp3Filenames(inputMp3Filenames):
+  '''Create list of new filenames from list of old filenames'''
+  finalList = []
+  logger.debug('newMp3Filenames() started')
+  for filename in inputMp3Filenames:
+    finalList.append(newMp3Filename(filename))
+  return finalList
+
+def renameMp3Filenames(oldMp3Filenames, newMp3Filenmes, inputDirectory=directoryWork):
   '''Renames list of mp3 files in given directory, returns nothing.
   {weekday}_{DD}.{MM}.{YYYY}bm.mp3 -> {YYYY}.{MM}.{DD}_{weekday}.mp3
   '''
@@ -92,48 +102,17 @@ def renameMp3Filenames(inputMp3Filenames, inputDirectory):
   # there can be problem if there is weekday somewhere else than at begging, but wrong filename format
   # TODO: test for relative path, works with absolute path only
   logger.debug('renameMp3Filenames() started.')
-  for fileName in inputMp3Filenames:
-    targetFilename = ''
-    counterDays = 0
-    for day in weekdays:
-      weekdayTest = fileName.find(day)
-      if weekdayTest > 0:
-        logger.warn('{0} already renamed to target format.'.format(fileName))
-      elif weekdayTest == 0:
-        logger.debug('{0} proccessing started.'.format(fileName))
-        logger.debug('filename: {0}  weekday: {1}'.format(fileName, day))
-        fileNameTemp = fileName[(len(day) + 1):]
-        tempDD, tempMM, tempYYYY, tempExtension = fileNameTemp.split('.')
-        # add . at between YYYY and 'bm' string
-        if len(tempYYYY) > 4:
-          logger.debug('Additional string present in year: {0}'.format(tempYYYY))
-          tempYYYY, tempAdditional = tempYYYY[0:-2], tempYYYY[-2:]
-        else:
-          logger.debug('Correct number of figures in year: {0}'.format(tempYYYY))
-        logger.debug('Rearanging timestamp in filename started: {0}.'.format(fileName))
-        tempString = '_'.join([tempDD, day])
-        tempDD = tempString
-        fileNameTempListOrder = [tempYYYY, tempMM, tempDD, tempAdditional, tempExtension]
-        targetFilename = '.'.join(fileNameTempListOrder)
-        logger.debug('Rearanging timestamp in filename finished: {0}.'.format(targetFilename))
-        
-        if not os.path.isfile(inputDirectory + os.sep + targetFilename):
-          logger.debug('OK to rename, target {0} not found.'.format(targetFilename))
-          logger.debug(inputDirectory)
-          logger.debug('{0}, {1}'.format(fileName, targetFilename))
-          os.rename(inputDirectory + os.sep + fileName,
-                    inputDirectory + os.sep + targetFilename)
-          logger.info('{0} renamed to {1}.'.format(fileName, targetFilename))
-        else:
-          logger.warn('{0} skipped, already exists.'.format(fileName))
-      elif weekdayTest == -1:
-        logger.debug('{0} not found in {1}'.format(day, fileName))
-        counterDays = counterDays + 1
-        if counterDays > 4:
-          logger.warn('weekday not found in {0}'.format(fileName))
-      else:
-        logger.error('TODO: unknown case for weekday in {0}'.format(fileName))
-  logger.debug('renameMp3Filenames() finished.')
+  logger.debug(inputDirectory)
+  for oldMp3Filename, newMp3Filename in zip(oldMp3Filenames, newMp3Filenmes):
+    if not os.path.isfile(inputDirectory + os.sep + newMp3Filename):
+      logger.debug('Target filename {0} not found, go for rename.'.format(newMp3Filename))
+      logger.debug('{0}, {1}'.format(oldMp3Filename, newMp3Filename))
+      #rename file
+      os.rename(inputDirectory + os.sep + oldMp3Filename,
+                      inputDirectory + os.sep + newMp3Filename)
+      logger.info('{0} renamed to {1}.'.format(oldMp3Filename, newMp3Filename))
+    else:
+      logger.warn('{0} skipped, already exists.'.format(oldMp3Filename))
 
 class simpleapp_tk(Tkinter.Tk):
   def __init__(self, parent):
@@ -154,9 +133,10 @@ class simpleapp_tk(Tkinter.Tk):
     labelNewNames = Tkinter.Label(self,textvariable=self.labelNewName,anchor="w",fg="white",bg="blue")
     labelNewNames.grid(column=columnUI + 1,row=rowUI,sticky='EW')
     rowUI = 1
-    mp3FilesOld = readMp3Filenames(directoryWork)
+    self.mp3FilesOld = readMp3Filenames(directoryWork)
+    self.mp3FilesNew = []
     # populate columns for old and new file name
-    for mp3FileOld in mp3FilesOld:
+    for mp3FileOld in self.mp3FilesOld:
       logger.debug(' GUI: mp3 file old name: {0}'.format(mp3FileOld))
       self.labelOldmp3FileName = Tkinter.StringVar()
       self.labelOldmp3FileName.set(mp3FileOld)
@@ -165,6 +145,7 @@ class simpleapp_tk(Tkinter.Tk):
       mp3FileNew = newMp3Filename(mp3FileOld)
       logger.debug(' GUI: mp3 file new name: {0}'.format(mp3FileNew))
       # self.varCheck = Tkinter.IntVar()
+      self.mp3FilesNew.append(mp3FileNew)
       if mp3FileNew == mp3FileOld:
         # use default colors if there is no need to rename files
         fgColor = 'black'
@@ -194,7 +175,8 @@ class simpleapp_tk(Tkinter.Tk):
     logger.info(' GUI: refresh GUI and mp3 files list')
     self.initialize()
   def OnButtonRenameClick(self):
-    logger.info(' GUI: TODO Rename mp3 files')
+    logger.info(' GUI: Rename mp3 files')
+    renameMp3Filenames(self.mp3FilesOld, self.mp3FilesNew)
     self.OnButtonRefreshClick()
   def OnButtonExitClick(self):
     logger.info(' GUI: Exiting program')
@@ -205,13 +187,17 @@ def mainGUI():
   app.title('Alarm mp3 files renamer')
   app.mainloop()
 
-def main():
+def mainConsole():
   logging.info('Start')
   mp3Files = readMp3Filenames(directoryWork)
-  renameMp3Filenames(mp3Files, directoryWork)
+  newMp3FilenamesList = newMp3Filenames(mp3Files)
+  renameMp3Filenames(mp3Files, newMp3FilenamesList, directoryWork)
   logging.info('Finished')
 
 
 if __name__ == '__main__':
-    # main()
-    mainGUI()
+    if len(sys.argv) > 1:
+      if sys.argv[1] == '-c':
+        mainConsole()
+    else:
+      mainGUI()
