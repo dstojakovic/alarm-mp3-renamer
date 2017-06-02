@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''TODO: program description '''
+"""TODO: program description """
 # TODO: ubacivanje config fajla
 # TODO: GUI config, radni direktorijum
 # TODO: GUI rename checkbox
@@ -19,26 +19,28 @@ logger.debug('Config started.')
 configFile = 'config.xml'
 directoryMaster = 'd:\mp3\podcast\Alarm'
 # directoryMonth = '201705-test'
-directoryMonth = '201705'
+directoryMonth = '201706'
 directoryWork = directoryMaster + os.sep + directoryMonth
 directoryCurrent = os.path.dirname(os.path.realpath(__file__))
 weekdays = ['ponedeljak', 'utorak', 'sreda', 'cetvrtak', 'petak']
 logger.debug('Config finished.')
-
+class filenameOldNew(Object):
+  """keeps old and newfile name"""
+  pass
 def configLoad(configName):
-  '''Loads configuration from configName and returns as list configuration'''
+  """Loads configuration from configName and returns as list configuration"""
   pass
 
 def configWrite(configList, configOutputFile=configFile)  :
-  '''Writes configuration; configList into configOutputFIle'''
+  """Writes configuration; configList into configOutputFIle"""
   pass
 
 def configApply(configList)  :
-  '''Applies configuration from configList'''
+  """Applies configuration from configList"""
   pass
 
 def readMp3Filenames(dirWorking):
-  '''Scans given absolute path for mp3 files and returns them as list'''
+  """Scans given absolute path for mp3 files and returns them as list"""
   logger.info('readMp3Filenames() started')
   fileNamesAll = os.listdir(dirWorking)
   fileNamesMp3 = []
@@ -53,7 +55,7 @@ def readMp3Filenames(dirWorking):
   return fileNamesMp3
 
 def newMp3Filename(inputMp3Filename):
-  '''Create new string filename from input file name in format YYYY.MM.DD_weekday*bm.mp3'''
+  """Create new string filename from input file name in format YYYY.MM.DD_weekday*bm.mp3"""
   logger.debug('newMp3Filename() started: {0}'.format(inputMp3Filename))
   targetFilename = ''
   counterDays = 0
@@ -87,7 +89,7 @@ def newMp3Filename(inputMp3Filename):
   return targetFilename
 
 def newMp3Filenames(inputMp3Filenames):
-  '''Create list of new filenames from list of old filenames'''
+  """Create list of new filenames from list of old filenames"""
   finalList = []
   logger.debug('newMp3Filenames() started')
   for filename in inputMp3Filenames:
@@ -95,9 +97,9 @@ def newMp3Filenames(inputMp3Filenames):
   return finalList
 
 def renameMp3Filenames(oldMp3Filenames, newMp3Filenmes, inputDirectory=directoryWork):
-  '''Renames list of mp3 files in given directory, returns nothing.
+  """Renames list of mp3 files in given directory, returns nothing.
   {weekday}_{DD}.{MM}.{YYYY}bm.mp3 -> {YYYY}.{MM}.{DD}_{weekday}.mp3
-  '''
+  """
   # hardcoded, there will be trouble latter
   # there can be problem if there is weekday somewhere else than at begging, but wrong filename format
   # TODO: test for relative path, works with absolute path only
@@ -160,7 +162,7 @@ class simpleapp_tk(Tkinter.Tk):
       labelNewmp3FileName = Tkinter.Label(self,textvariable=self.labelNewmp3FileName,anchor="w",fg=fgColor,bg=bgColor)
       labelNewmp3FileName.grid(column=columnUI + 1,row=rowUI,sticky='EW')
       rowUI = rowUI + 1
-    #Buttons
+    #Buttons on bottom
     columnUI = 0
     buttonRefresh = Tkinter.Button(self,text=u"Refresh",command=self.OnButtonRefreshClick)
     buttonRefresh.grid(column=columnUI,row=rowUI)
