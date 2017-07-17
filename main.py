@@ -10,21 +10,74 @@ import sys
 import pdb
 import logging
 import Tkinter
+from xml.etree import ElementTree as ET
 
 # variables setup; TODO config
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-else:
-    logging.basicConfig(level=logging.FATAL)
 logger = logging.getLogger(__name__)
-logger.info(sys.prefix)
-logger.debug(' Config started.')
-configFile = 'config.xml'
-directoryMaster = 'd:\mp3\podcast\Alarm'
-directoryMonth = '201707'
-directoryWork = directoryMaster + os.sep + directoryMonth
-directoryCurrent = os.path.dirname(os.path.realpath(__file__))
-logger.debug(' Config finished.')
+logging.basicConfig(level=logging.INFO)
+# if __name__ == '__main__':
+    # logging.basicConfig(level=logging.INFO)
+# else:
+    # logging.basicConfig(level=logging.FATAL)
+# logger = logging.getLogger(__name__)
+# logger.info(sys.prefix)
+# logger.debug(' Config started.')
+# configFile = 'config.xml'
+# directory = 'd:\mp3\podcast\Alarm'
+# directoryMonth = '201707'
+# directoryWork = directory + os.sep + directoryMonth
+# directoryCurrent = os.path.dirname(os.path.realpath(__file__))
+# logger.debug(' Config finished.')
+
+
+
+class AppConfig():
+    """
+    Creates configuratin data structure
+    input: string, config file name in same directory
+    """
+    def __init__(self, configFile):
+        logger.info(' Initial config started.')
+        self.configuration = {}
+        self.configFile = configFile
+        self.absFilePath = os.path.abspath(os.path.join(self.configFile)) 
+        self.dom = ET.parse(self.absFilePath)
+        self.configtree = self.dom.findall('config/')
+        for c in self.configtree:
+            logger.debug('config item object'.format(c))
+            logger.debug('tag {0}, text {1}, attribute {2}'.format(c.tag, c.text, c.attrib))
+            self.configuration[c.tag] = c.text
+        self.directoryWork = self.configuration['directory'] + os.sep + self.configuration['directoryMonth']
+        self.configuration['weekdays'] = []
+        self.weekdays = self.dom.findall('config/weekdays/')
+        for day in self.weekdays:
+            self.configuration['weekdays'].append(day.text)
+            logger.debug(day.text)
+        
+        logger.info(' Initial config finished.')
+    def __str__(self):
+        return 'Configuration loaded from {0}'.format(self.configFile)
+    def __repr__(self):
+        return str('{0}({1})'.format(self.__class__.__name__, self.configFile))
+    def printConfig(self):
+        """
+        Print configuration
+        """
+        for c in self.configuration:
+            print('{0}: {1}'.format(c, self.configuration[c]))
+    def getConfig(self):
+        """
+        output: list, configuration
+        """
+        return self.configuration
+    def defaultConfig():
+        """
+        Default setup if needed
+        """
+        self.configuration['weekdays'] = ['ponedeljak', 'utorak', 'sreda', 'cetvrtak', 'petak']
+        self.configuration['loglevel'] = 'INFO'
+        self.configuration['directory'] = 'd:\mp3\podcast\Alarm'
+        self.configuration['directoryMonth'] = '201707'
 
 class filenameOldNew():
     """keeps old and newfile name"""
@@ -45,16 +98,28 @@ class filenameOldNew():
     def setNew(self, text):
         self.new = text
 
-def configLoad(configName):
-    """Loads configuration from configName and returns as list configuration"""
+def configLoad():
+    """
+    Loads configuration from configName and returns as list configuration
+    
+    input: string, configName
+    """
     logger.info(' TODO: configLoad()')
 
-def configWrite(configList, configOutputFile=configFile)  :
-    """Writes configuration; configList into configOutputFIle"""
+def configWrite():
+    """
+    Writes configuration; configList into configOutputFile
+    
+    input: string, configList, configOutputFile=configFile
+    """
     logger.info(' TODO: configWrite()')
 
-def configApply(configList)  :
-    """Applies configuration from configList"""
+def configApply():
+    """
+    Applies configuration from configList
+    
+    input: string, configList
+    """
     logger.info(' TODO: configApply()')
 
 def readMp3Filenames(directory):
@@ -172,7 +237,7 @@ class simpleapp_tk(Tkinter.Tk):
                                       anchor="w",fg="white",bg="blue")
         labelNewNames.grid(column=columnUI + 1,row=rowUI,sticky='EW')
         rowUI = 1
-        self.mp3FileObjects = readMp3Filenames(directoryWork)
+        self.mp3FileObjects = readMp3Filenames(config.directoryWork)
         newMp3Filenames(self.mp3FileObjects)
         # populate columns for old and new filenames
         for mp3FileObject in self.mp3FileObjects:
@@ -216,7 +281,7 @@ class simpleapp_tk(Tkinter.Tk):
     def OnButtonRenameClick(self):
         """Calls execution of rename function"""
         logger.info(' GUI: Rename mp3 files')
-        renameMp3Filenames(self.mp3FileObjects, directoryWork)
+        renameMp3Filenames(self.mp3FileObjects, config.directoryWork)
         self.OnButtonRefreshClick()
     
     def OnButtonExitClick(self):
@@ -231,12 +296,15 @@ def mainGUI():
 
 def mainConsole():
     logging.info(' Start')
-    mp3Files = readMp3Filenames(directoryWork)
+    mp3Files = readMp3Filenames(config.directoryWork)
     newMp3Filenames(mp3Files)
-    renameMp3Filenames(mp3Files, directoryWork)
+    renameMp3Filenames(mp3Files, config.directoryWork)
     logging.info(' Finished')
 
 def main(*args):
+    configFile = 'config.xml'
+    global config
+    config = AppConfig(configFile)
     if len(sys.argv) > 1:
         if sys.argv[1] == '-c':
             mainConsole()
