@@ -1,0 +1,17 @@
+<?xml version='1.0' ?>
+<root>
+    <config>
+        <configversion testattrib="hahahah">00</configversion>
+        <loglevel>INFO</loglevel>
+        <directory>d:\mp3\podcast\Alarm</directory>
+        <directoryTest> 201701-test</directoryTest>
+        <directoryMonth>201712</directoryMonth>
+        <weekdays>
+            <weekday>ponedeljak</weekday>
+            <weekday>utorak</weekday>
+            <weekday>sreda</weekday>
+            <weekday>cetvrtak</weekday>
+            <weekday>petak</weekday>
+        </weekdays>
+    </config>
+</root>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """TODO: program description """
-# TODO: ubacivanje config fajla
+# TODO: ubacivanje config fajla([v] xml,[] json)
 # TODO: GUI config, radni direktorijum
 # TODO: GUI rename checkbox
 
@@ -11,24 +11,13 @@ import pdb
 import logging
 import Tkinter
 from xml.etree import ElementTree as ET
+from xml.dom import minidom 
 
-# variables setup; TODO config
+
+# variables setup; TODO config file
+LOG_FORMAT = '%(asctime)s %(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO, format = LOG_FORMAT)
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-# if __name__ == '__main__':
-    # logging.basicConfig(level=logging.INFO)
-# else:
-    # logging.basicConfig(level=logging.FATAL)
-# logger = logging.getLogger(__name__)
-# logger.info(sys.prefix)
-# logger.debug(' Config started.')
-# configFile = 'config.xml'
-# directory = 'd:\mp3\podcast\Alarm'
-# directoryMonth = '201707'
-# directoryWork = directory + os.sep + directoryMonth
-# directoryCurrent = os.path.dirname(os.path.realpath(__file__))
-# logger.debug(' Config finished.')
-
 
 
 class AppConfig():
@@ -38,46 +27,153 @@ class AppConfig():
     """
     def __init__(self, configFile):
         logger.info(' Initial config started.')
-        self.configuration = {}
         self.configFile = configFile
-        self.absFilePath = os.path.abspath(os.path.join(self.configFile)) 
-        self.dom = ET.parse(self.absFilePath)
-        self.configtree = self.dom.findall('config/')
-        for c in self.configtree:
-            logger.debug('config item object'.format(c))
-            logger.debug('tag {0}, text {1}, attribute {2}'.format(c.tag, c.text, c.attrib))
-            self.configuration[c.tag] = c.text
-        self.directoryWork = self.configuration['directory'] + os.sep + self.configuration['directoryMonth']
-        self.configuration['weekdays'] = []
-        self.weekdays = self.dom.findall('config/weekdays/')
-        for day in self.weekdays:
-            self.configuration['weekdays'].append(day.text)
-            logger.debug(day.text)
-        
+        self.loadConfig()
         logger.info(' Initial config finished.')
+        
     def __str__(self):
-        return 'Configuration loaded from {0}'.format(self.configFile)
+        return ' Configuration loaded from {0}'.format(self.configFile)
+        
     def __repr__(self):
         return str('{0}({1})'.format(self.__class__.__name__, self.configFile))
+        
     def printConfig(self):
         """
         Print configuration
         """
         for c in self.configuration:
             print('{0}: {1}'.format(c, self.configuration[c]))
+            
     def getConfig(self):
         """
         output: list, configuration
         """
         return self.configuration
-    def defaultConfig():
+        
+    def setConfig(self, newConfiguration):
+        """Set new configuration"""
+        pass
+    def loadConfig(self):
+        """Loads configuration to file"""
+        self.loadConfigXML()
+
+    def writeConfig(self):
+        """Writes configuration to file"""
+        self.writeConfigXML()
+
+    def loadConfigXML(self):
+        """
+        Loads configuration; config dictionary from XML self.configfile
+
+        input: none,
+        uses string, self.configfile
+        dictionary, self.configuration
+        list, self.configuration_list
+        https://www.blog.pythonlibrary.org/2013/04/30/python-101-intro-to-xml-parsing-with-elementtree/
+        """
+        logger.info(' Loading config started.')
+        self.configuration = {}
+        # use configuration list to get ordered xml output file when saving xml
+        self.configuration_list = []
+        self.absFilePath = os.path.abspath(os.path.join(self.configFile))
+        logger.info(' Loading configuration file {0}'.format(self.absFilePath))
+        self.root = ET.parse(self.absFilePath)
+        self.configtree = self.root.findall('config/')
+        logger.debug(' Parsing configuration file')
+        for c in self.configtree:
+            logger.debug(' config item object'.format(c))
+            logger.debug(' tag {0}, text {1}, attribute {2}'.format(c.tag, c.text, c.attrib))
+            self.configuration[c.tag] = c.text
+            self.configuration_list.append(c.tag)
+        self.directoryWork = ''.join(
+            [self.configuration['directory'],
+            os.sep,
+            self.configuration['directoryMonth']]
+            )
+        logger.info(' Working directory set to {0}'.format(self.directoryWork))
+        self.configuration['weekdays'] = []
+        self.weekdays = self.root.findall('config/weekdays/')
+        for day in self.weekdays:
+            self.configuration['weekdays'].append(day.text)
+            logger.debug(day.text)
+        logger.info(' Weekdays set to {0}'.format(self.configuration['weekdays']))
+        logger.info(' Loading config finished.')
+
+    def writeConfigXML(self):
+        """
+        Writes configuration; config dictionary into XML self.configfile
+
+        input: none,
+        uses string, self.configfile
+        dictionary, self.configuration
+        list, self.configuration_list
+        https://www.blog.pythonlibrary.org/2013/04/30/python-101-intro-to-xml-parsing-with-elementtree/
+        """
+
+        def prettify(elem):
+            """
+            Return a pretty-printed XML string for the Element.
+            """
+            rough_string = ET.tostring(elem, encoding='utf-8')
+            reparsed = minidom.parseString(rough_string)
+            return reparsed.toprettyxml(indent="\t")
+
+        logger.info(' Writing configuration started')
+        root = ET.Element('root')
+        config = ET.Element('config')
+        root.append(config)
+        for item in self.configuration_list:
+            logger.debug(' item {0}'.format(item))
+            if item != 'weekdays':
+                item_xml = ET.SubElement(config, item)
+                item_xml.text = self.configuration[item]
+            else:
+                item_xml = ET.SubElement(config, item)
+                for weekday in self.configuration['weekdays']:
+                    day = ET.SubElement(item_xml, 'weekday')
+                    day.text = weekday
+            # item.attrib = self.configuration['configversion']
+
+        tree = ET.ElementTree(root)
+        # fix as in https://everydayimlearning.blogspot.rs/2012/11/elementtree.html
+        xml_string = prettify(tree.getroot())
+        # replace tabs with whitespaces as prefered practice
+        xml_string_spaces = xml_string.replace('\t','    ')
+        filename = 'config_test_pretty.xml'
+        with open(filename, "w") as fh:
+            fh.write(xml_string_spaces)
+        logger.info(' Writing configuration finished')
+    
+    def loadConfigJSON(self):
+        """
+        Loads configuration; config dictionary from JSON self.configfile
+
+        input: none,
+        uses string, self.configfile
+        dictionary, self.configuration
+        list, self.configuration_list
+        """
+        pass
+
+    def writeConfigJSON(self):
+        """
+        Writes configuration; config dictionary into JSON self.configfile
+
+        input: none,
+        uses string, self.configfile
+        dictionary, self.configuration
+        list, self.configuration_list
+        """
+        pass
+
+    def defaultConfig(self):
         """
         Default setup if needed
         """
         self.configuration['weekdays'] = ['ponedeljak', 'utorak', 'sreda', 'cetvrtak', 'petak']
         self.configuration['loglevel'] = 'INFO'
         self.configuration['directory'] = 'd:\mp3\podcast\Alarm'
-        self.configuration['directoryMonth'] = '201707'
+        self.configuration['directoryMonth'] = '201708'
 
 class filenameOldNew():
     """keeps old and newfile name"""
@@ -98,27 +194,28 @@ class filenameOldNew():
     def setNew(self, text):
         self.new = text
 
-def configLoad():
+def configLoad(configFile):
     """
-    Loads configuration from configName and returns as list configuration
+    Loads configuration from configFile and returns as dictionary
     
-    input: string, configName
+    input: string, configFile
     """
     logger.info(' TODO: configLoad()')
 
-def configWrite():
+def configWrite(configFile):
     """
-    Writes configuration; configList into configOutputFile
+    Writes configuration; config dictionary into configFile
     
-    input: string, configList, configOutputFile=configFile
+    input: string, configFile
+           dictionary, config dictionary
     """
     logger.info(' TODO: configWrite()')
 
-def configApply():
+def configApply(configDictionary):
     """
-    Applies configuration from configList
+    Applies configuration from config dictionary
     
-    input: string, configList
+    input: dictionary, configDictionary
     """
     logger.info(' TODO: configApply()')
 
@@ -270,6 +367,8 @@ class simpleapp_tk(Tkinter.Tk):
         buttonRename.grid(column=columnUI + 1,row=rowUI)
         buttonExit = Tkinter.Button(self,text=u"Exit",command=self.OnButtonExitClick)
         buttonExit.grid(column=columnUI + 2,row=rowUI)
+        buttonWriteConfig = Tkinter.Button(self,text=u"Write Config",command=self.OnButtonWriteConfig)
+        buttonWriteConfig.grid(column=columnUI + 3,row=rowUI)
         # UI Grid configuration
         self.grid_columnconfigure(0,weight=1)
    
@@ -288,7 +387,14 @@ class simpleapp_tk(Tkinter.Tk):
         """Calls End program"""
         logger.info(' GUI: Exiting program')
         exit()
-    
+
+    def OnButtonWriteConfig(self):
+        """Writes configuration to file by calling AppConfig.writeConfig()"""
+        logger.info(' GUI: writing configuration started')
+        config.writeConfig()
+        logger.info(' GUI: writing configuration finished')
+
+
 def mainGUI():
     app = simpleapp_tk(None)
     app.title('Alarm mp3 files renamer')
