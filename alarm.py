@@ -18,7 +18,7 @@ import sys
 import pdb
 import logging
 from xml.etree import ElementTree as ET
-from xml.dom import minidom 
+from xml.dom import minidom
 
 
 # variables setup; TODO config file
@@ -37,26 +37,26 @@ class AppConfig():
         self.configFile = configFile
         self.loadConfig()
         logger.debug(' Initial configuration finished.')
-        
+
     def __str__(self):
         return ' Configuration loaded from {0}'.format(self.configFile)
-        
+
     def __repr__(self):
         return str('{0}({1})'.format(self.__class__.__name__, self.configFile))
-        
+
     def printConfig(self):
         """
         Print configuration
         """
         for c in self.configuration:
             print('{0}: {1}'.format(c, self.configuration[c]))
-            
+
     def getConfig(self):
         """
         output: list, configuration
         """
         return self.configuration
-        
+
     def setConfig(self, newConfiguration):
         """Set new configuration"""
         pass
@@ -151,7 +151,7 @@ class AppConfig():
         with open(filename, "w") as fh:
             fh.write(xml_string_spaces)
         logger.info(' Writing configuration finished.')
-    
+
     def loadConfigJSON(self):
         """
         Loads configuration; config dictionary from JSON self.configfile
@@ -205,7 +205,7 @@ class filenameOldNew():
 def configLoad(configFile):
     """
     Loads configuration from configFile and returns as dictionary
-    
+
     input: string, configFile
     """
     logger.info(' TODO: configLoad()')
@@ -213,7 +213,7 @@ def configLoad(configFile):
 def configWrite(configFile):
     """
     Writes configuration; config dictionary into configFile
-    
+
     input: string, configFile
            dictionary, config dictionary
     """
@@ -222,14 +222,14 @@ def configWrite(configFile):
 def configApply(configDictionary):
     """
     Applies configuration from config dictionary
-    
+
     input: dictionary, configDictionary
     """
     logger.info(' TODO: configApply()')
 
 def readMp3Filenames(directory):
     """Scans given absolute path for mp3 files and returns them as list of filenameOldNew objects
-    
+
     input: string, absolute path on filesystem
     output: list of strings, mp3 filenames
     """
@@ -286,7 +286,7 @@ def newMp3Filename(fileNameObject):
 
 def newMp3Filenames(fileNameObjects):
     """Execute method for creating new filenames for each filenameOldNew object
-    
+
     input: list of filenameOldNew objects
     """
     logger.info(' newMp3Filenames(): started.')
@@ -321,9 +321,10 @@ def renameMp3Filenames(mp3Files, inputDirectory):
     logger.info(' renameMp3Filenames(): {0} processed'.format(counter))
 
 class simpleapp_tk(tk.Tk):
-    def __init__(self, parent):
+    def __init__(self, parent, config):
         tk.Tk.__init__(self, parent)
         self.parrent = parent
+        self.config = config
         self.initialize()
 
     def initialize(self):
@@ -342,7 +343,7 @@ class simpleapp_tk(tk.Tk):
                                       anchor="w",fg="white",bg="blue")
         labelNewNames.grid(column=columnUI + 1,row=rowUI,sticky='EW')
         rowUI = 1
-        self.mp3FileObjects = readMp3Filenames(config.directoryWork)
+        self.mp3FileObjects = readMp3Filenames(self.config.directoryWork)
         newMp3Filenames(self.mp3FileObjects)
         # populate columns for old and new filenames
         for mp3FileObject in self.mp3FileObjects:
@@ -379,7 +380,7 @@ class simpleapp_tk(tk.Tk):
         buttonWriteConfig.grid(column=columnUI + 3,row=rowUI)
         # UI Grid configuration
         self.grid_columnconfigure(0,weight=1)
-   
+
     def OnButtonRefreshClick(self):
         """Calls for repopulation of columns"""
         logger.info(' GUI: refresh GUI and mp3 files list.')
@@ -390,7 +391,7 @@ class simpleapp_tk(tk.Tk):
         logger.info(' GUI: Rename mp3 files.')
         renameMp3Filenames(self.mp3FileObjects, config.directoryWork)
         self.OnButtonRefreshClick()
-    
+
     def OnButtonExitClick(self):
         """Calls End program"""
         logger.info(' GUI: Exiting program.')
@@ -403,12 +404,12 @@ class simpleapp_tk(tk.Tk):
         logger.info(' GUI: writing configuration finished.')
 
 
-def mainGUI():
-    app = simpleapp_tk(None)
+def mainGUI(config):
+    app = simpleapp_tk(None, config)
     app.title('Alarm mp3 files renamer')
     app.mainloop()
 
-def mainConsole():
+def mainConsole(config):
     logging.info(' Start.')
     mp3Files = readMp3Filenames(config.directoryWork)
     newMp3Filenames(mp3Files)
@@ -417,13 +418,12 @@ def mainConsole():
 
 def main(*args):
     configFile = 'config.xml'
-    global config
-    config = AppConfig(configFile)
+    configuration = AppConfig(configFile)
     if len(sys.argv) > 1:
         if sys.argv[1] == '-c':
-            mainConsole()
+            mainConsole(configuration)
     else:
-        mainGUI()
+        mainGUI(configuration)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
