@@ -5,7 +5,7 @@
         <loglevel>INFO</loglevel>
         <directory>d:\mp3\podcast\Alarm</directory>
         <directoryTest> 201701-test</directoryTest>
-        <directoryMonth>201712</directoryMonth>
+        <directoryMonth>201801</directoryMonth>
         <weekdays>
             <weekday>ponedeljak</weekday>
             <weekday>utorak</weekday>

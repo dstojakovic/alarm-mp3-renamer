@@ -4,12 +4,19 @@
 # TODO: GUI config, radni direktorijum
 # TODO: GUI rename checkbox
 
+try:
+    import Tkinter as tk
+    import tkFont
+    import ttk
+except ImportError:  # Python 3
+    import tkinter as tk
+    import tkinter.font as tkFont
+    import tkinter.ttk as ttk
 
 import os
 import sys
 import pdb
 import logging
-import Tkinter
 from xml.etree import ElementTree as ET
 from xml.dom import minidom 
 
@@ -26,10 +33,10 @@ class AppConfig():
     input: string, config file name in same directory
     """
     def __init__(self, configFile):
-        logger.info(' Initial config started.')
+        logger.debug(' Initial configuration started.')
         self.configFile = configFile
         self.loadConfig()
-        logger.info(' Initial config finished.')
+        logger.debug(' Initial configuration finished.')
         
     def __str__(self):
         return ' Configuration loaded from {0}'.format(self.configFile)
@@ -53,6 +60,7 @@ class AppConfig():
     def setConfig(self, newConfiguration):
         """Set new configuration"""
         pass
+
     def loadConfig(self):
         """Loads configuration to file"""
         self.loadConfigXML()
@@ -71,18 +79,18 @@ class AppConfig():
         list, self.configuration_list
         https://www.blog.pythonlibrary.org/2013/04/30/python-101-intro-to-xml-parsing-with-elementtree/
         """
-        logger.info(' Loading config started.')
+        logger.info(' Loading configuration started.')
         self.configuration = {}
         # use configuration list to get ordered xml output file when saving xml
         self.configuration_list = []
         self.absFilePath = os.path.abspath(os.path.join(self.configFile))
-        logger.info(' Loading configuration file {0}'.format(self.absFilePath))
+        logger.info(' Loading configuration file {0}.'.format(self.absFilePath))
         self.root = ET.parse(self.absFilePath)
         self.configtree = self.root.findall('config/')
         logger.debug(' Parsing configuration file')
         for c in self.configtree:
-            logger.debug(' config item object'.format(c))
-            logger.debug(' tag {0}, text {1}, attribute {2}'.format(c.tag, c.text, c.attrib))
+            logger.debug(' config item object {0}.'.format(c))
+            logger.debug(' tag {0}, text {1}, attribute {2}.'.format(c.tag, c.text, c.attrib))
             self.configuration[c.tag] = c.text
             self.configuration_list.append(c.tag)
         self.directoryWork = ''.join(
@@ -90,14 +98,14 @@ class AppConfig():
             os.sep,
             self.configuration['directoryMonth']]
             )
-        logger.info(' Working directory set to {0}'.format(self.directoryWork))
+        logger.info(' Working directory set to {0}.'.format(self.directoryWork))
         self.configuration['weekdays'] = []
         self.weekdays = self.root.findall('config/weekdays/')
         for day in self.weekdays:
             self.configuration['weekdays'].append(day.text)
             logger.debug(day.text)
-        logger.info(' Weekdays set to {0}'.format(self.configuration['weekdays']))
-        logger.info(' Loading config finished.')
+        logger.debug(' Weekdays set to {0}.'.format(self.configuration['weekdays']))
+        logger.info(' Loading configuration finished.')
 
     def writeConfigXML(self):
         """
@@ -118,12 +126,12 @@ class AppConfig():
             reparsed = minidom.parseString(rough_string)
             return reparsed.toprettyxml(indent="\t")
 
-        logger.info(' Writing configuration started')
+        logger.info(' Writing configuration started.')
         root = ET.Element('root')
         config = ET.Element('config')
         root.append(config)
         for item in self.configuration_list:
-            logger.debug(' item {0}'.format(item))
+            logger.debug(' item {0}.'.format(item))
             if item != 'weekdays':
                 item_xml = ET.SubElement(config, item)
                 item_xml.text = self.configuration[item]
@@ -142,7 +150,7 @@ class AppConfig():
         filename = 'config_test_pretty.xml'
         with open(filename, "w") as fh:
             fh.write(xml_string_spaces)
-        logger.info(' Writing configuration finished')
+        logger.info(' Writing configuration finished.')
     
     def loadConfigJSON(self):
         """
@@ -225,7 +233,7 @@ def readMp3Filenames(directory):
     input: string, absolute path on filesystem
     output: list of strings, mp3 filenames
     """
-    logger.info(' readMp3Filenames() started')
+    logger.info(' readMp3Filenames() started.')
     fileNamesAll = os.listdir(directory)
     fileNamesMp3 = []
     for fileName in fileNamesAll:
@@ -233,18 +241,18 @@ def readMp3Filenames(directory):
         if fileNameLower[-3:] == 'mp3':
             fileObject = filenameOldNew(fileName)
             fileNamesMp3.append(fileObject)
-            logger.debug(' {0} added to mp3 list'.format(fileObject))
+            logger.debug(' {0} added to mp3 list.'.format(fileObject))
         else:
-            logger.debug(' {0} is not mp3'.format(fileName))
+            logger.debug(' {0} is not mp3.'.format(fileName))
     processed = len(fileNamesAll)
     discarded = len(fileNamesAll)-len(fileNamesMp3)
-    logger.info(' readMp3Filenames(): {0} filename(s) processed, {1} discarded'.format(processed, discarded))
+    logger.info(' readMp3Filenames(): {0} filename(s) processed, {1} discarded.'.format(processed, discarded))
     return fileNamesMp3
 
 def newMp3Filename(fileNameObject):
     """Create new string filename from input file name in format YYYY.MM.DD_weekday*bm.mp3"""
     fileName = fileNameObject.getOld()
-    logger.debug(' newMp3Filename() started: {0}'.format(fileName))
+    logger.debug(' newMp3Filename() started: {0}.'.format(fileName))
     targetFilename = ''
     counterDays = 0
     weekdays = ['ponedeljak', 'utorak', 'sreda', 'cetvrtak', 'petak']
@@ -255,15 +263,15 @@ def newMp3Filename(fileNameObject):
             targetFilename = fileName
         elif weekdayTest == 0:
             logger.debug(' {0} proccessing started.'.format(fileName))
-            logger.debug(' filename: {0}  weekday: {1}'.format(fileName, day))
+            logger.debug(' filename: {0}  weekday: {1}.'.format(fileName, day))
             fileNameTemp = fileName[(len(day) + 1):]
             tempDD, tempMM, tempYYYY, tempExtension = fileNameTemp.split('.')
             # add . at between YYYY and 'bm' string
             if len(tempYYYY) > 4:
-                logger.debug(' Additional string present in year: {0}'.format(tempYYYY))
+                logger.debug(' Additional string present in year: {0}.'.format(tempYYYY))
                 tempYYYY, tempAdditional = tempYYYY[0:-2], tempYYYY[-2:]
             else:
-                logger.debug(' Correct number of figures in year: {0}'.format(tempYYYY))
+                logger.debug(' Correct number of figures in year: {0}.'.format(tempYYYY))
             logger.debug(' Rearanging timestamp in filename started: {0}.'.format(fileName))
             tempString = '_'.join([tempDD, day])
             tempDD = tempString
@@ -271,9 +279,9 @@ def newMp3Filename(fileNameObject):
             targetFilename = '.'.join(fileNameTempListOrder)
             logger.debug(' Rearanging timestamp in filename finished: {0}.'.format(targetFilename))
         elif weekdayTest == -1:
-            logger.debug(' day {0} not found in filename'.format(day))
+            logger.debug(' day {0} not found in filename.'.format(day))
         else:
-            logger.error(' TODO: unknown case for weekday in {0}'.format(fileName))
+            logger.error(' TODO: unknown case for weekday in {0}.'.format(fileName))
     fileNameObject.setNew(targetFilename)
 
 def newMp3Filenames(fileNameObjects):
@@ -281,11 +289,11 @@ def newMp3Filenames(fileNameObjects):
     
     input: list of filenameOldNew objects
     """
-    logger.info(' newMp3Filenames(): started')
+    logger.info(' newMp3Filenames(): started.')
     for filename in fileNameObjects:
         newMp3Filename(filename)
-        logger.debug(' New filename: {0}'.format(filename.getNew()))
-    logger.info(' newMp3Filenames(): {0} filename(s) processed'.format(len(fileNameObjects)))
+        logger.debug(' New filename: {0}.'.format(filename.getNew()))
+    logger.info(' newMp3Filenames(): {0} filename(s) processed.'.format(len(fileNameObjects)))
     return None
 
 def renameMp3Filenames(mp3Files, inputDirectory):
@@ -312,9 +320,9 @@ def renameMp3Filenames(mp3Files, inputDirectory):
             counter -= 1
     logger.info(' renameMp3Filenames(): {0} processed'.format(counter))
 
-class simpleapp_tk(Tkinter.Tk):
+class simpleapp_tk(tk.Tk):
     def __init__(self, parent):
-        Tkinter.Tk.__init__(self, parent)
+        tk.Tk.__init__(self, parent)
         self.parrent = parent
         self.initialize()
 
@@ -323,14 +331,14 @@ class simpleapp_tk(Tkinter.Tk):
         columnUI = 0
         rowUI = 0
         # Label: original filenames column
-        self.labelOldName = Tkinter.StringVar()
+        self.labelOldName = tk.StringVar()
         self.labelOldName.set('Old mp3 filenames')
-        labelOldNames = Tkinter.Label(self,textvariable=self.labelOldName,anchor="w")
+        labelOldNames = tk.Label(self,textvariable=self.labelOldName,anchor="w")
         labelOldNames.grid(column=columnUI,row=rowUI,sticky='EW')
         # Label: new filenames column
-        self.labelNewName = Tkinter.StringVar()
+        self.labelNewName = tk.StringVar()
         self.labelNewName.set('New mp3 filenames')
-        labelNewNames = Tkinter.Label(self,textvariable=self.labelNewName,
+        labelNewNames = tk.Label(self,textvariable=self.labelNewName,
                                       anchor="w",fg="white",bg="blue")
         labelNewNames.grid(column=columnUI + 1,row=rowUI,sticky='EW')
         rowUI = 1
@@ -339,12 +347,12 @@ class simpleapp_tk(Tkinter.Tk):
         # populate columns for old and new filenames
         for mp3FileObject in self.mp3FileObjects:
             logger.debug(' GUI: mp3 file old name: {0}'.format(mp3FileObject.getOld()))
-            self.labelOldmp3FileName = Tkinter.StringVar()
+            self.labelOldmp3FileName = tk.StringVar()
             self.labelOldmp3FileName.set(mp3FileObject.getOld())
-            labelOldmp3FileName = Tkinter.Label(self,textvariable=self.labelOldmp3FileName,anchor="w")
+            labelOldmp3FileName = tk.Label(self,textvariable=self.labelOldmp3FileName,anchor="w")
             labelOldmp3FileName.grid(column=columnUI,row=rowUI,sticky='EW')
             logger.debug(' GUI: mp3 file new name: {0}'.format(mp3FileObject.getNew()))
-            # self.varCheck = Tkinter.IntVar()
+            # self.varCheck = tk.IntVar()
             if mp3FileObject.getNew() == mp3FileObject.getOld():
                 # use default colors if there is no need to rename files
                 fgColor = 'black'
@@ -354,45 +362,45 @@ class simpleapp_tk(Tkinter.Tk):
                 # use special colors to mark files that need to be renamed
                 fgColor = 'white'
                 bgColor = 'blue'
-            self.labelNewmp3FileName = Tkinter.StringVar()
+            self.labelNewmp3FileName = tk.StringVar()
             self.labelNewmp3FileName.set(mp3FileObject.getNew())
-            labelNewmp3FileName = Tkinter.Label(self,textvariable=self.labelNewmp3FileName,anchor="w",fg=fgColor,bg=bgColor)
+            labelNewmp3FileName = tk.Label(self,textvariable=self.labelNewmp3FileName,anchor="w",fg=fgColor,bg=bgColor)
             labelNewmp3FileName.grid(column=columnUI + 1,row=rowUI,sticky='EW')
             rowUI = rowUI + 1
         # Command buttons on bottom
         columnUI = 0
-        buttonRefresh = Tkinter.Button(self,text=u"Refresh",command=self.OnButtonRefreshClick)
+        buttonRefresh = tk.Button(self,text=u"Refresh",command=self.OnButtonRefreshClick)
         buttonRefresh.grid(column=columnUI,row=rowUI)
-        buttonRename = Tkinter.Button(self,text=u"Rename",command=self.OnButtonRenameClick)
+        buttonRename = tk.Button(self,text=u"Rename",command=self.OnButtonRenameClick)
         buttonRename.grid(column=columnUI + 1,row=rowUI)
-        buttonExit = Tkinter.Button(self,text=u"Exit",command=self.OnButtonExitClick)
+        buttonExit = tk.Button(self,text=u"Exit",command=self.OnButtonExitClick)
         buttonExit.grid(column=columnUI + 2,row=rowUI)
-        buttonWriteConfig = Tkinter.Button(self,text=u"Write Config",command=self.OnButtonWriteConfig)
+        buttonWriteConfig = tk.Button(self,text=u"Write Config",command=self.OnButtonWriteConfig)
         buttonWriteConfig.grid(column=columnUI + 3,row=rowUI)
         # UI Grid configuration
         self.grid_columnconfigure(0,weight=1)
    
     def OnButtonRefreshClick(self):
         """Calls for repopulation of columns"""
-        logger.info(' GUI: refresh GUI and mp3 files list')
+        logger.info(' GUI: refresh GUI and mp3 files list.')
         self.initialize()
 
     def OnButtonRenameClick(self):
         """Calls execution of rename function"""
-        logger.info(' GUI: Rename mp3 files')
+        logger.info(' GUI: Rename mp3 files.')
         renameMp3Filenames(self.mp3FileObjects, config.directoryWork)
         self.OnButtonRefreshClick()
     
     def OnButtonExitClick(self):
         """Calls End program"""
-        logger.info(' GUI: Exiting program')
+        logger.info(' GUI: Exiting program.')
         exit()
 
     def OnButtonWriteConfig(self):
         """Writes configuration to file by calling AppConfig.writeConfig()"""
-        logger.info(' GUI: writing configuration started')
+        logger.info(' GUI: writing configuration started.')
         config.writeConfig()
-        logger.info(' GUI: writing configuration finished')
+        logger.info(' GUI: writing configuration finished.')
 
 
 def mainGUI():
@@ -401,11 +409,11 @@ def mainGUI():
     app.mainloop()
 
 def mainConsole():
-    logging.info(' Start')
+    logging.info(' Start.')
     mp3Files = readMp3Filenames(config.directoryWork)
     newMp3Filenames(mp3Files)
     renameMp3Filenames(mp3Files, config.directoryWork)
-    logging.info(' Finished')
+    logging.info(' Finished.')
 
 def main(*args):
     configFile = 'config.xml'
