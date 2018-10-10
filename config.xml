@@ -1,11 +1,10 @@
-<?xml version='1.0' ?>
+<?xml version="1.0" ?>
 <root>
     <config>
-        <configversion testattrib="hahahah">00</configversion>
+        <configversion>00</configversion>
         <loglevel>INFO</loglevel>
         <directory>d:\mp3\podcast\Alarm</directory>
-        <directoryTest> 201701-test</directoryTest>
-        <directoryMonth>201801</directoryMonth>
+        <directoryMonth>201810</directoryMonth>
         <weekdays>
             <weekday>ponedeljak</weekday>
             <weekday>utorak</weekday>
