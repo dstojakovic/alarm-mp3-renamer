@@ -2,7 +2,9 @@
 Renames mp3 files files from Alarm podcast to sort friendly format.
 
 ### Getting Started
-Clone repo. Rename config.xml.example to config.xml. Set root and month directories.
+Download podcasts from [Alarm](http://podcast.daskoimladja.com).
+
+Clone repo. Rename config.xml.example to config.xml. Set root and month directories (month directory containing mp3 files).
 Run program. Rename recognised files.
 
 ### Run program
